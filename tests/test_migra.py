@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import io
+import os
 
 from pytest import raises
 from schemainspect import get_inspector
@@ -15,6 +16,8 @@ select 2;
 
 """
 DROP = "drop table x;"
+
+HOSTNAME = os.getenv("DOCKERIZED", default="localhost")
 
 
 def test_statements():
@@ -38,41 +41,37 @@ def test_deps():
     for FIXTURE_NAME in ["dependencies", "dependencies2", "dependencies3"]:
         do_fixture_test(FIXTURE_NAME)
 
-
 def test_everything():
     for FIXTURE_NAME in ["everything"]:
         do_fixture_test(FIXTURE_NAME, with_privileges=True)
-
 
 def test_partitioning():
     for FIXTURE_NAME in ["partitioning"]:
         do_fixture_test(FIXTURE_NAME)
 
-
 def test_collations():
     for FIXTURE_NAME in ["collations"]:
         do_fixture_test(FIXTURE_NAME)
-
 
 def test_triggers():
     for FIXTURE_NAME in ["triggers", "triggers2"]:
         do_fixture_test(FIXTURE_NAME)
 
-
 def test_singleschemea():
     for FIXTURE_NAME in ["singleschema"]:
         do_fixture_test(FIXTURE_NAME, schema="goodschema")
 
+def test_differentschemas():
+    for FIXTURE_NAME in ["diffrentschemas"]:
+        do_fixture_test(FIXTURE_NAME, schema="goodschema,goodschema1")
 
 def test_singleschema_ext():
     for FIXTURE_NAME in ["singleschema_ext"]:
         do_fixture_test(FIXTURE_NAME, create_extensions_only=True)
 
-
 def test_privs():
     for FIXTURE_NAME in ["privileges"]:
         do_fixture_test(FIXTURE_NAME, with_privileges=True)
-
 
 schemainspect_test_role = "schemainspect_test_role"
 
@@ -112,8 +111,8 @@ def do_fixture_test(
         flags += ["--with-privileges"]
     fixture_path = "tests/FIXTURES/{}/".format(fixture_name)
     EXPECTED = io.open(fixture_path + "expected.sql").read().strip()
-    with temporary_database(host="localhost") as d0, temporary_database(
-        host="localhost"
+    with temporary_database(host=HOSTNAME) as d0, temporary_database(
+        host=HOSTNAME
     ) as d1:
         with S(d0) as s0:
             create_role(s0, schemainspect_test_role)
@@ -142,7 +141,7 @@ def do_fixture_test(
         EXPECTED2 = io.open(fixture_path + "expected2.sql").read().strip()
 
         with S(d0) as s0, S(d1) as s1:
-            m = Migration(s0, s1, schema=schema)
+            m = Migration(s0, s1, schema=schema, only_tables=False)
             m.inspect_from()
             m.inspect_target()
             with raises(AttributeError):
