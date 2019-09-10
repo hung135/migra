@@ -1,4 +1,6 @@
+ 
 #Wrapper to hook into Migra Package
+ 
 import sys
 from migra import do_command
 import version
