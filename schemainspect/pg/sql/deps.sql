@@ -1,4 +1,3 @@
-
 with things1 as (
   select
     oid as objid,
@@ -66,3 +65,4 @@ combined as (
     and rw.rulename = '_RETURN'
 )
 select * from combined;
+ 
