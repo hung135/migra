@@ -8,18 +8,25 @@ def check_for_drop(s):
 
 
 class Statements(list):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, no_drops=False, *args, **kwargs):
         self.safe = True
+        self.no_drops = no_drops
         super(Statements, self).__init__(*args, **kwargs)
 
     @property
     def sql(self):
         if self.safe:
             self.raise_if_unsafe()
+        if self.no_drops:
+            self.remove_drops()
         if not self:
             return ""
 
         return "\n\n".join(self) + "\n\n"
+    
+    def remove_drops(self):
+        to_remove = [s for s in self if check_for_drop(s)]
+        [self.remove(s) for s in to_remove]
 
     def raise_if_unsafe(self):
         if any(check_for_drop(s) for s in self):
@@ -30,7 +37,6 @@ class Statements(list):
     def __add__(self, other):
         self += list(other)
         return self
-
 
 class UnsafeMigrationException(Exception):
     pass

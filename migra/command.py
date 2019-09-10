@@ -68,6 +68,13 @@ def parse_args(args):
         default=False,
         help="Only print out table diffs"
     )
+    parser.add_argument(
+        "--no_drops",
+        dest="no_drops",
+        action="store_true",
+        default=False,
+        help="Only print out table diffs"
+    )
     parser.add_argument("dburl_from", help="The database you want to migrate.")
     parser.add_argument(
         "dburl_target", help="The database you want to use as the target."
@@ -83,7 +90,7 @@ def run(args, out=None, err=None):
     if not err:
         err = sys.stderr  # pragma: no cover
     with arg_context(args.dburl_from) as ac0, arg_context(args.dburl_target) as ac1:
-        m = Migration(ac0, ac1, schema=schema, tables=tables, tables_only=args.tables_only)
+        m = Migration(ac0, ac1, schema=schema, tables=tables, tables_only=args.tables_only, no_drops=args.no_drops)
         if args.unsafe:
             m.set_safety(False)
         if args.create_extensions_only:
