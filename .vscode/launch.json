@@ -19,12 +19,9 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "args": [
-                "postgres://root@dbmigra/root",
-                "postgres://root@dbmigra/postgres",
-                "--schema=production,staging",
-                "--unsafe",
-                "--tables=production",
-                "--tables_only"
+                "postgres://root@dbmigra/enforce",
+                "postgres://root@dbmigra/Salesforce_staging",
+                "--unsafe"
             ]
         },
         {

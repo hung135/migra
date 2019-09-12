@@ -31,7 +31,7 @@ def statements_for_changes(
     drops_only=False,
     modifications=True,
     dependency_ordering=False,
-    add_dependents_for_modified=False,
+    add_dependents_for_modified=False
 ):
     added, removed, modified, unmodified = differences(things_from, things_target, process=True)
 
@@ -149,8 +149,8 @@ def get_enum_modifications(tables_from, tables_target, enums_from, enums_target)
     return pre + recreate + post
 
 
-def get_table_changes(tables_from, tables_target, enums_from, enums_target, tables_only):
-    added, removed, modified, _ = differences(tables_from, tables_target, process=True, tables_only=tables_only)
+def get_table_changes(tables_from, tables_target, enums_from, enums_target, tables_only, target_schema):
+    added, removed, modified, _ = differences(tables_from, tables_target, process=True, tables_only=tables_only, target_schema=target_schema)
 
     statements = Statements()
     for t, v in removed.items():
@@ -203,7 +203,8 @@ def get_selectable_changes(
     enums_target,
     tables,
     add_dependents_for_modified=True,
-    tables_only=False
+    tables_only=False,
+    target_schema=None
 ):
     if tables is not None:
         tables_from = od((k,v) for k, v in selectables_from.items() if v.is_table and k.split(".")[1].replace('"', "") in tables)
@@ -216,10 +217,10 @@ def get_selectable_changes(
     other_target = od((k, v) for k, v in selectables_target.items() if not v.is_table)
 
     added_tables, removed_tables, modified_tables, unmodified_tables = differences(
-        tables_from, tables_target, process=True, tables_only=tables_only
+        tables_from, tables_target, process=True, tables_only=tables_only, target_schema=target_schema
     )
     added_other, removed_other, modified_other, unmodified_other = differences(
-        other_from, other_target, process=True, tables_only=tables_only
+        other_from, other_target, process=True, tables_only=tables_only, target_schema=target_schema
     )
 
     changed_all = {}
@@ -265,7 +266,7 @@ def get_selectable_changes(
     )
 
     statements += get_table_changes(
-        tables_from, tables_target, enums_from, enums_target, tables_only
+        tables_from, tables_target, enums_from, enums_target, tables_only, target_schema=target_schema
     )
 
     if any([functions(added_other), functions(modified_other)]):
@@ -284,11 +285,12 @@ def get_selectable_changes(
 
 
 class Changes(object):
-    def __init__(self, i_from, i_target, tables, tables_only):
+    def __init__(self, i_from, i_target, tables, tables_only, target_schema):
         self.i_from = i_from
         self.i_target = i_target
         self.tables = tables
         self.tables_only = tables_only
+        self.target_schema = target_schema
 
     def __getattr__(self, name):
         if name == "non_pk_constraints":
@@ -313,7 +315,8 @@ class Changes(object):
                 self.i_from.enums,
                 self.i_target.enums,
                 self.tables,
-                tables_only=self.tables_only
+                tables_only=self.tables_only,
+                target_schema = self.target_schema
             )
 
         elif name in THINGS:

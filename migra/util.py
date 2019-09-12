@@ -4,7 +4,7 @@ from collections import OrderedDict as od
 
 import re
 
-def differences(a, b, add_dependencies_for_modifications=True, process=False, tables_only=False):
+def differences(a, b, add_dependencies_for_modifications=True, process=False, tables_only=False, target_schema=None):
     if process and tables_only:
         a, a_keys, a_old_keys = preprocess(a)
         b, b_keys, b_old_keys = preprocess(b)
@@ -17,7 +17,6 @@ def differences(a, b, add_dependencies_for_modifications=True, process=False, ta
         unmodified = od((k, b[k]) for k in sorted(keys_common) if a[k] == b[k])
         # convert back
         modified = od((a_old_keys[k], modified[k]) for k in sorted(modified.keys()))
-        return added, removed, modified, unmodified
     else:
         a_keys = set(a.keys())
         b_keys = set(b.keys())
@@ -28,7 +27,15 @@ def differences(a, b, add_dependencies_for_modifications=True, process=False, ta
         removed = od((k, a[k]) for k in sorted(keys_removed))
         modified = od((k, b[k]) for k in sorted(keys_common) if a[k] != b[k])
         unmodified = od((k, b[k]) for k in sorted(keys_common) if a[k] == b[k])
-        return added, removed, modified, unmodified
+
+    # check in added only to update schema names
+    for k in added:
+        try: 
+            if target_schema and added[k].is_table and added[k].schema != target_schema:
+                added[k].schema = target_schema
+        except AttributeError:
+            continue
+    return added, removed, modified, unmodified
 
 def preprocess(od):
     od_list = list(od.keys())
