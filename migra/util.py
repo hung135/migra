@@ -16,7 +16,11 @@ def differences(a, b, add_dependencies_for_modifications=True, process=False, ta
         modified = od((k, b[k]) for k in sorted(keys_common) if a[k] != b[k])
         unmodified = od((k, b[k]) for k in sorted(keys_common) if a[k] == b[k])
         # convert back
+        #added = od((a_old_keys[k], added[k]) for k in sorted(added.keys()))
         modified = od((a_old_keys[k], modified[k]) for k in sorted(modified.keys()))
+        removed = od((a_old_keys[k], removed[k]) for k in sorted(removed.keys()))
+        #unmodified = od((a_old_keys[k], unmodified[k]) for k in sorted(unmodified.keys()))
+
     else:
         a_keys = set(a.keys())
         b_keys = set(b.keys())
@@ -29,13 +33,28 @@ def differences(a, b, add_dependencies_for_modifications=True, process=False, ta
         unmodified = od((k, b[k]) for k in sorted(keys_common) if a[k] == b[k])
 
     # check in added only to update schema names
-    for k in added:
-        try: 
-            if target_schema and added[k].is_table and added[k].schema != target_schema:
-                added[k].schema = target_schema
+    # for k in added:
+    #     try: 
+    #         if target_schema and added[k].is_table and added[k].schema != target_schema:
+    #             added[k].schema = target_schema
+    #     except AttributeError:
+    #         continue
+    if target_schema:
+        added = update_schema(added, target_schema)
+        removed = update_schema(removed, target_schema)
+        modified = update_schema(modified, target_schema)
+        unmodified = update_schema(unmodified, target_schema)
+    return added, removed, modified, unmodified
+
+def update_schema(item, schema):
+    
+    for k in item:
+        try:
+            if item[k].schema != schema:
+                item[k].schema = schema
         except AttributeError:
             continue
-    return added, removed, modified, unmodified
+    return item
 
 def preprocess(od):
     od_list = list(od.keys())

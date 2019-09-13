@@ -21,7 +21,25 @@
             "args": [
                 "postgres://root@dbmigra/enforce",
                 "postgres://root@dbmigra/Salesforce_staging",
-                "--unsafe"
+                "--unsafe",
+                "--tables_only",
+                "--schema=enforce,cfpb3",
+                "--no_drops"
+            ]
+        },
+        {
+            "name": "Migrabd",
+            "type": "python",
+            "request": "launch",
+            "program": "/workspace/pydbmigra.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "postgres://root@dbmigra/Salesforce_staging",
+                "postgres://root@dbmigra/enforce",
+                "--unsafe",
+                "--tables_only",
+                "--schema=cfpb3,enforce"
             ]
         },
         {

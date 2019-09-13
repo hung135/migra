@@ -18,13 +18,14 @@ def to_pytype(sqla_dialect, typename):
 
 
 class DBInspector(object):
-    def __init__(self, c, include_internal=False, tables=None, tables_only=False):
+    def __init__(self, c, include_internal=False, tables=None, tables_only=False, target_schema=None):
         self.c = c
         self.engine = self.c.engine
         self.dialect = self.engine.dialect
         self.include_internal = include_internal
         self.tables_only = tables_only
         self.selected_tables = tables
+        self.target_schema = target_schema
         self.load_all()
 
     def to_pytype(self, typename):

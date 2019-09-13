@@ -31,9 +31,10 @@ def statements_for_changes(
     drops_only=False,
     modifications=True,
     dependency_ordering=False,
-    add_dependents_for_modified=False
+    add_dependents_for_modified=False,
+    target_schema=None
 ):
-    added, removed, modified, unmodified = differences(things_from, things_target, process=True)
+    added, removed, modified, unmodified = differences(things_from, things_target, process=True, target_schema=target_schema)
 
     return statements_from_differences(
         added=added,
@@ -324,6 +325,7 @@ class Changes(object):
                 statements_for_changes,
                 getattr(self.i_from, name),
                 getattr(self.i_target, name),
+                target_schema = self.target_schema
             )
 
         else:

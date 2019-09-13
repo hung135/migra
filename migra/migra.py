@@ -22,13 +22,13 @@ class Migration(object):
         if isinstance(x_from, DBInspector):
             self.changes.i_from = x_from
         else:
-            self.changes.i_from = get_inspector(x_from, schema=self._determine_schema(), tables=tables, tables_only=tables_only)
+            self.changes.i_from = get_inspector(x_from, schema=self._determine_schema(), tables=tables, tables_only=tables_only, target_schema=self._determine_schema())
             if x_from:
                 self.s_from = x_from
         if isinstance(x_target, DBInspector):
             self.changes.i_target = x_target
         else:
-            self.changes.i_target = get_inspector(x_target, schema=self._determine_schema(False), tables=tables, tables_only=tables_only)
+            self.changes.i_target = get_inspector(x_target, schema=self._determine_schema(False), tables=tables, tables_only=tables_only, target_schema=self._determine_schema())
             if x_target:
                 self.s_target = x_target
     
@@ -81,6 +81,7 @@ class Migration(object):
             self.add(self.changes.pk_constraints(drops_only=True))
             self.add(self.changes.indexes(drops_only=True))
             self.add(self.changes.triggers(drops_only=True))
+            self.add(self.changes.sequences(drops_only=False))
 
             self.add(self.changes.selectables())
         else: 

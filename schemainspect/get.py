@@ -5,7 +5,7 @@ from .pg import PostgreSQL
 SUPPORTED = {"postgresql": PostgreSQL}
 
 
-def get_inspector(x, schema=None, tables=None, tables_only=False):
+def get_inspector(x, schema=None, tables=None, tables_only=False, target_schema=None):
     if x is None:
         return NullInspector()
 
@@ -15,7 +15,7 @@ def get_inspector(x, schema=None, tables=None, tables_only=False):
     except KeyError:
         raise NotImplementedError
 
-    inspected = ic(c, tables_only=tables_only, tables=tables)
+    inspected = ic(c, tables_only=tables_only, tables=tables, target_schema=target_schema)
     if schema:
         inspected.one_schema(schema)
     return inspected

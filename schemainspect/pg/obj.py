@@ -219,8 +219,6 @@ class InspectedFunction(InspectedSelectable):
 
     @property
     def create_statement(self):
-        return self.full_definition + ";"
-        """
         return CREATE_FUNCTION_FORMAT.format(
             signature=self.signature,
             result_string=self.result_string,
@@ -230,7 +228,6 @@ class InspectedFunction(InspectedSelectable):
             strictness=self.strictness,
             security_type=self.security_type,
         )
-        """
 
     @property
     def drop_statement(self):
@@ -691,7 +688,7 @@ class InspectedRowPolicy(Inspected, TableRelated):
 
 
 class PostgreSQL(DBInspector):
-    def __init__(self, c, include_internal=False, tables=None, tables_only=False):
+    def __init__(self, c, include_internal=False, tables=None, tables_only=False, target_schema=None):
         def processed(q):
             if not include_internal:
                 q = q.replace("-- SKIP_INTERNAL", "")
@@ -715,7 +712,7 @@ class PostgreSQL(DBInspector):
         self.TRIGGERS_QUERY = processed(TRIGGERS_QUERY)
         self.COLLATIONS_QUERY = processed(COLLATIONS_QUERY)
         self.RLSPOLICIES_QUERY = processed(RLSPOLICIES_QUERY)
-        super(PostgreSQL, self).__init__(c, include_internal, tables, tables_only)
+        super(PostgreSQL, self).__init__(c, include_internal, tables, tables_only, target_schema)
 
     def load_all(self):
         self.load_schemas()
@@ -870,7 +867,7 @@ class PostgreSQL(DBInspector):
                     dbtype=c.datatype,
                     dbtypestr=c.datatypestring,
                     pytype=self.to_pytype(c.datatype),
-                    default=c.defaultdef,
+                    default=self.correct_default(c.defaultdef),
                     not_null=c.not_null,
                     is_enum=c.is_enum,
                     enum=get_enum(c.enum_name, c.enum_schema),
@@ -960,6 +957,24 @@ class PostgreSQL(DBInspector):
             t = each.quoted_full_table_name
             n = each.quoted_full_name
             self.relations[t].constraints[n] = each
+
+    def correct_default(self, default):
+        try:
+            import re
+            if "lastval" in default:
+                return default
+            table = re.search(r".\w+'::\w+", default)[0]
+            full_name = self.target_schema + table
+            if "nextval" in default:
+                return  "nextval('{0})".format(full_name)
+            elif "currval" in default:
+                return "currval('{0})".format(full_name)
+            else:
+                return default
+        except Exception: 
+            return default
+
+        
 
     def load_functions(self):
         self.functions = od()
